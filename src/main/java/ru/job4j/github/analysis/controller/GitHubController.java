@@ -1,8 +1,9 @@
 package ru.job4j.github.analysis.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import ru.job4j.github.analysis.dto.RepositoryCommits;
 import ru.job4j.github.analysis.model.Repository;
 import ru.job4j.github.analysis.service.RepositoryService;
@@ -10,25 +11,29 @@ import ru.job4j.github.analysis.service.RepositoryService;
 import java.util.List;
 
 @RestController
+@AllArgsConstructor
 @RequestMapping("/api")
 public class GitHubController {
-
-    @Autowired
     private RepositoryService repositoryService;
 
     @GetMapping("/repositories")
     public List<Repository> getAllRepositories() {
-        return List.of();
+        return repositoryService.findAll();
     }
 
     @GetMapping("/commits/{name}")
-    public List<RepositoryCommits> getCommits(@PathVariable(value = "name") String name) {
-        return List.of();
+    public RepositoryCommits getCommits(@PathVariable(value = "name") String name) {
+        return repositoryService.findAllCommit(name);
     }
 
     @PostMapping("/repository")
     public ResponseEntity<Void> create(@RequestBody Repository repository) {
-        repositoryService.create(repository);
-        return ResponseEntity.noContent().build();
+        Repository repo = repositoryService.create(repository);
+        var uri = ServletUriComponentsBuilder
+                .fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(repo.getId())
+                .toUri();
+        return ResponseEntity.created(uri).build();
     }
 }
